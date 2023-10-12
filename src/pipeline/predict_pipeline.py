@@ -30,7 +30,7 @@ class PredictPipeline:
             raise CustomException(e,sys)
 
 
-
+#input data collected from web application and passed on to model for prediction
 class CustomData:
     def __init__(  self,
         gender: str,
@@ -54,7 +54,7 @@ class CustomData:
         self.reading_score = reading_score
 
         self.writing_score = writing_score
-
+#collect input custumdata from webpage and convert it as dataframe 
     def get_data_as_data_frame(self):
         try:
             custom_data_input_dict = {
