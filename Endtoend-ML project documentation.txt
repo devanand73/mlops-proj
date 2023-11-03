@@ -1,0 +1,82 @@
+Endtoend-ML project documentation
+
+Objective: Architect and implement an advanced machine learning model to provide predictive insights on employee retention and attrition. Utilize comprehensive historical employee datasets encompassing metrics such as satisfaction levels, tenure, project involvement, average monthly working hours, compensation scales, promotional history, and employment status. Ensure the model effectively determines the likelihood of an employee's continuity or departure from the organization. Supplement the model with a robust RESTful API for seamless model training using batch datasets and facilitate real-time predictions using designated prediction batch datasets.
+
+
+main.py
+
+executing this file launches flask application accessed using url: http://0.0.0.0/5000.
+this flask application uses CORS AND DASHBOARD	flask extensions
+application supports 3 endpoints[Routes]
+1.training 2.batch prediction and 3.prediction[single prediction]
+contains 3 methods to handle above mentioned routes
+training ,prediction and conf modules are imported to pass training data path and perform batch and single prediction
+contains code to handle a POST request in a Flask web application by extracting FORM data, creating a pandas DataFrame with the appropriate columns and a single row of that data, and then converting the DataFrame's columns to specified data types.
+
+
+1.APPS\CORE\CONFIG CLASS	
+
+this class implements following
+
+a.set data path for training and prediction data.
+b.run_id method to create unique id for every training and prediction data ande log.
+
+2.APPS\CORE\LOGGER CLASS
+
+this class implements following
+
+a.logs all training and prediction logs at DEBUG level in a specified format capturing all exceptions.
+
+3.APPS\CORE\FILE_OPERATION CLASS
+
+a.this class implements methods to SAVE_MODEL,LOAD_MODEL AND CHOOSE_MODEL
+
+b.once model is trained it should be saved[serialized] as binary file like .sav /.pkl to be used for prediction later.
+saved model has to be loaded[deserialized] for prediction and since we use different models[xgboost & randomforest] and hyperparamers tuning and classified the models we have to select best model from collection for prediction using CHOOSE_MODEL.
+
+
+
+4.APPS\CORE\DATABASE\DATABASE_OPERATION CLASS
+
+a.database_connection method to connect to sqlite and create database.
+
+b.create_table method that gets database_name and column_names as parameters connects to database and creates PREDICTION table if it does not exist and drops if it already exists.if not then creates it reading the column_names passed
+
+c.function inseret_data takes database name and table name to connect to table and read csv data[traing_data_proceesed.csv file in data folder] row by row and insert the same into table.
+
+d.Export_csv function takes database_name and table_name as parameters to export data from table to input.csv file in data\training_data_validation folder.
+
+5.APPS\CORE\INGESTION\LOAD_VALIDATE CLASS
+
+a.used to validate training dataset given by client matches with database schema [validated by comaring with train and predict schema file template for number of columns and column name]
+
+b.values_from_schema method reads the schema files[predict & train] for column names for the input .csv files
+
+c. validate_column_length(self,number_of_columns):validates column number of schema with training and prediction csv files.
+
+d.validate_missing_values(self):method validates input .csv files for missing values
+
+e.replace_missing_values methoad replaces missing values with "null"
+
+f.archive_old_files method moves old rejected files to Archive folder
+
+g.move_processed_file method moves processed csv files to prediction_data_processed folder.
+
+h."validate_trainset" method validates training dataset .csv file by validating column name and number of column with schema_train.json file 
+
+validate missing value with "null" and create table training_raw_data_t in training database.insert values into table and then expoert database table to .csv file
+
+i."validate_predictset" method validates prediction dataset same as above for colum name,column count with schema_predict.json and validates for missing values before inserting the values to database table and export table as .csv file.
+
+
+6.  TrainModel class:
+
+
+executing main.py executes following sequence
+
+sets up training data paths unique run_id] followed by executing trainmodel where we perform loadvalidate of training .csv against schema_train.json for column_name,column_length and column count perform preprocessing .
+followed by preprocessing of train dataset[input.csv]like handling missing values and perform data imputationfollwed by creating clusters and splitting dataset to x and y train,test for training and rumn model finetuner to identify best model.
+
+followed by call to batch_predict or single_predict based on the route taken predict_model gets executed
+
+
