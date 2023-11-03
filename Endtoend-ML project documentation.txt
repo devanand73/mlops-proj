@@ -79,4 +79,7 @@ followed by preprocessing of train dataset[input.csv]like handling missing value
 
 followed by call to batch_predict or single_predict based on the route taken predict_model gets executed
 
+=====================================================================
+ML Model Deployment Architecture overview
 
+In a robust ML deployment architecture, the client interfaces with Nginx, a high-performance web server acting as a reverse proxy. Nginx efficiently routes client requests to Gunicorn, a WSGI HTTP server. Gunicorn, with its multiple workers, communicates with the Flask framework to process requests and execute the application logic. The entire orchestration is managed and monitored by Supervisor, ensuring continuous uptime and process control. This cohesive integration ensures scalability, reliability, and efficient handling of web-based ML model requests.
