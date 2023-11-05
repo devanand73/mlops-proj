@@ -1,0 +1,126 @@
+			=========================================================
+			Endtoendmlv1 Deployment of Flash ML-Application to AWS-ec2
+                        ==========================================================
+Launch ubuntu t2.micro instance with port 22,80 allowing all traffic from anyehere
+
+ssh -i "endtoendmlv1.pem" ubuntu@3.21.24.1
+
+1.connect to ec2 using winscp and copy all application files to seperate directory created for project
+
+2.install all the applications required for deployment orgestration like
+ Nginix,Gunicorn,supervisor
+
+3.create python3 virtual environment and install all requirement libraries from requirement.txt
+===============================================================================================
+Item Number	Label	Command
+1	Update the Package List			sudo apt update
+2	Install Python 3.10			sudo apt install python3.10 python3.10-venv python3.10-dev
+3	Upgrade pip				python3.10 -m pip install --upgrade pip
+4	Create a Virtual Environment		python3.10 -m venv /path/to/my_project/venv
+5	Activate the Virtual Environment	source /path/to/my_project/venv/bin/activate
+6	Install Packages Using pip		pip install package_name
+7	Deactivate the Virtual Environment	deactivate
+8	Check the Python Version in the Virtual Environment	python --version
+9	Install a Specific Package with a Version	        pip install package_name==package_version
+10	List Installed Packages in the Virtual Environment	pip list
+11	Install Packages from a requirements.txt File	        pip install -r requirements.txt
+12	Save the List of Installed Packages to a File	        pip freeze > requirements.txt
+13	Exit the Virtual Environment	                        exit
+You can follow these steps sequentially    to set up and manage a Python virtual environment on Ubuntu.
+
+
+
+5.perform following configuration for nginx:
+==============================================
+1  # remove the default page by deleting the default file to redirect our custom index.html page
+2  sudo rm /etc/nginx/sites-enabled/default
+3
+4  # create a new config file in the sites-available folder and create a symbolic link to it in the sites-enabled folder.
+5  sudo vim /etc/nginx/sites-enabled/endtoend_ml_v1.conf
+6
+7  server {
+8      listen 80;
+9      server_name 3.21.24.1;
+10
+11     root /home/ubuntu/endtoend_ml_v1;
+12
+13     access_log /home/ubuntu/endtoend_ml_v1/logs/nginx/access.log;
+14     error_log /home/ubuntu/endtoend_ml_v1/logs/nginx/error.log;
+15
+16     location / {
+17         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+18         proxy_set_header Host $http_host;
+19         proxy_redirect off;
+20         if (!-f $request_filename) {
+21             proxy_pass http://127.0.0.1:8000;
+22             break;
+23         }
+24     }
+25
+26     location /static {
+27         alias /home/ubuntu/endtoend_ml_v1/static/;
+28         autoindex on;
+29     }
+30  }
+31
+32  :wq to save and exit
+
+create  directory for nginx logs
+mkdir -p /home/ubuntu/endtoend_ml_v1/logs/nginx_log
+
+Create symlink for this file in /etc/nginx/sites-enabled by running this command,
+sudo ln -s /etc/nginx/sites-available/endtoend_ml_v1.conf /etc/nginx/sites-enabled/endtoend_ml_v1.conf
+
+Restart nginx server
+sudo service nginx restart
+
+6.install gunicorn 
+
+pip3 install gunicorn
+
+To run main.py flask application execute   gunicorn -w 1 app:main.py
+
+8.install and configure supervisor
+install supervisorlibrary
+sudo apt install supervisor
+
+Create a supervisor file in /etc/supervisor/conf.d/ and configure it according to your requirements.
+		
+
+sudo vim /etc/supervisor/conf.d/endtoend_ml_v1.conf
+		=============================================	
+		Supervisor configuration for this application
+		=============================================
+
+[program:endtoend_ml_v1]
+directory=/home/ubuntu/endtoend_ml_v1
+command=/home/ubuntu/endtoend_ml_v1/venv/bin/gunicorn main:app
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+stderr_logfile=/home/ubuntu/endtoend_ml_v1/logs/supervisor_log/endtoend_ml_v1.err.log
+stdout_logfile=/home/ubuntu/endtoend_ml_v1/logs/supervisor_log/endtoend_ml_v1.out.log
+============================================================================================
+
+ Create the log directories and files listed in the endtoend_ml_v1.conf file. Make sure to replace endtoend_ml_v1 if it was modified in the Supervisor script.
+
+sudo mkdir /home/ubuntu/endtoend_ml_v1/logs/supervisor_log
+sudo touch /home/ubuntu/endtoend_ml_v1/logs/supervisor_log/endtoend_ml_v1.err.log
+sudo touch /home/ubuntu/endtoend_ml_v1/logs/supervisor_log/endtoend_ml_v1.out.log
+
+
+To enable the configuration, run the following commands:
+
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl reload
+
+
+additional command
+sudo service supervisor restart
+sudo service supervisor stop
+
+
+						======================END=========================
+.
